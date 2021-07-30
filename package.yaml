@@ -1,0 +1,49 @@
+name: probabilisp
+version: 0.1.0.0
+license: NCSA
+author: "Pritham Marupaka, Zi Mo Su"
+maintainer: "pritham2@illinois.edu, zimoms2@illinois.edu"
+copyright: ""
+
+extra-source-files:
+  - README.md
+
+description: Please see the README
+
+dependencies:
+  - base >= 4.7 && < 5
+  - unordered-containers >= 0.2
+  - parsec
+
+library:
+  source-dirs: src
+
+executables:
+  probabilisp:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - probabilisp
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs:
+      - test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - probabilisp
+      - QuickCheck >= 2.9.0
+      - HUnit >= 1.5
+      - test-framework
+      - test-framework-quickcheck2
+      - test-framework-hunit
+    default-extensions:
+      - NamedFieldPuns
