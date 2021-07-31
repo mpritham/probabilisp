@@ -7,25 +7,25 @@ import Text.Printf (printf)
 -- Types
 
 newtype Dist a = D {unD :: [(a, Probability)]}
-  deriving (Eq)
+  deriving (Eq, Show)
 
-instance (Eq a, Show a) => Show (Dist a) where
-  show d = show aux
-    where
-      aux =
-        foldr
-          ( \(x, p) acc ->
-              case lookup x acc of
-                Just p' ->
-                  map
-                    ( \(y, q) ->
-                        if y == x then (x, p + p') else (y, q)
-                    )
-                    acc
-                Nothing -> (x, p) : acc
-          )
-          []
-          (unD d)
+compress :: (Show a, Eq a) => Dist a -> String
+compress d = show aux
+  where
+    aux =
+      foldr
+        ( \(x, p) acc ->
+            case lookup x acc of
+              Just p' ->
+                map
+                  ( \(y, q) ->
+                      if y == x then (x, p + p') else (y, q)
+                  )
+                  acc
+              Nothing -> (x, p) : acc
+        )
+        []
+        (unD d)
 
 type Probability = Float
 
