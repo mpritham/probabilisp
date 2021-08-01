@@ -1,3 +1,4 @@
+import ParserCombinators
 import Prob
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
@@ -6,11 +7,16 @@ import Test.HUnit
 
 tests =
   [ testGroup
+      "ParserCombinators"
+      [ testCase "run" (1 @?= 1)
+      ],
+    testGroup
       "Prob"
       [ testCase "compress 1" (compress (uniform ['A', 'B']) @?= "[('A',0.5),('B',0.5)]"),
         testCase "compress 2" (compress (uniform ['A', 'A', 'B', 'C']) @?= "[('A',0.5),('B',0.25),('C',0.25)]"),
         testCase "uniform 1" (uniform ['A', 'B'] @?= D [('A', 1 / 2), ('B', 1 / 2)]),
         testCase "uniform 2" (uniform [1, 2, 3] @?= D [(1, 1 / 3), (2, 1 / 3), (3, 1 / 3)]),
+        testCase "enum 1" (enum [0.46, 0.54] [1, 2] @?= D [(1, 0.46), (2, 0.54)]),
         testCase "(??) 1" ((==) 'A' ?? uniform ['A', 'B'] @?= 1 / 2),
         testCase "(??) 2" ((==) 'A' ?? uniform ['A', 'A', 'B'] @?= 2 / 3),
         testCase
