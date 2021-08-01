@@ -43,7 +43,7 @@ uniform xx =
       p = 1.0 / count
    in D (map (\x -> (x, p)) xx)
 
-enum :: [Probability] -> Spread a
+enum :: [Probability] -> [a] -> Dist a
 enum pp xx =
   D (zip xx pp)
 
@@ -111,7 +111,8 @@ selectMany n c = do
 select :: Eq a => Int -> [a] -> Dist [a]
 select n = mapD (reverse . fst) . selectMany n
 
--- Example 1: Dice
+{-
+Example 1: Dice
 
 die :: Dist Int
 die = uniform [1 .. 6]
@@ -120,7 +121,6 @@ dice :: Int -> Dist [Int]
 dice 0 = certainly []
 dice n = join (:) die (dice (n - 1))
 
-{-
 > ((>=2) . length . filter (==6)) ?? dice 4
 0.13194445
 
@@ -128,7 +128,8 @@ dice n = join (:) die (dice (n - 1))
 6.666667e-2
 -}
 
--- Example 2: Monty Hall
+{-
+Example 2.1: Monty Hall
 
 data Outcome = Win | Lose
   deriving (Eq, Show)
@@ -143,7 +144,6 @@ firstChoice = uniform [Win, Lose, Lose]
 -- switch Win = certainly Lose
 -- switch Lose = certainly Win
 
-{-
 > firstChoice
 [(Win,0.33333334),(Lose,0.6666667)]
 
@@ -151,7 +151,8 @@ firstChoice = uniform [Win, Lose, Lose]
 [(Lose,0.33333334),(Win,0.6666667)]
 -}
 
---
+{-
+Example 2.2: Monty Hall
 
 doors :: [Door]
 doors = [A, B, C]
@@ -187,7 +188,6 @@ result s = if chosen s == prize s then Win else Lose
 eval :: Strategy -> Dist Outcome
 eval s = mapD result (game s start)
 
-{-
 > eval stay
 [(Lose,0.6666667),(Win,0.33333334)]
 

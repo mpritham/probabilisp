@@ -14,6 +14,7 @@ dependencies:
   - base >= 4.7 && < 5
   - unordered-containers >= 0.2
   - parsec
+  - mtl
 
 library:
   source-dirs: src
