@@ -1,5 +1,7 @@
 module Core where
 
+import Prob as P
+
 import Data.HashMap.Strict as H (HashMap, empty, fromList, insert, lookup)
 import Data.Typeable
 import Control.Monad.State
@@ -18,6 +20,7 @@ data Val
   | PrimFunc ([Val] -> EvalState Val)
   | Func [String] Val Env -- Closure
   | Void -- No value
+  | Dist [(Val, Float)]
   deriving (Typeable)
 
 type EvalState a = StateT Env (Except Diagnostic) a
@@ -63,6 +66,7 @@ instance Show Val where
   show (Boolean b)      = if b then "#t" else "#f"
   show (PrimFunc _)     = "#<primitive>"
   show (Func args _ _)  = "#<function:(λ (" ++ unwords args ++ ") ...)>"
+  show (Dist lst)       = "#<dist" ++ show lst ++ ">"
   show Void             = ""
 
 showArgs :: [Val] -> String
@@ -77,6 +81,7 @@ typeName Boolean{} = "Boolean"
 typeName PrimFunc{} = "PrimFunc"
 typeName Func{} = "Func"
 typeName Void = "Void"
+typeName Dist{} = "Dist"
 
 
 instance Show Diagnostic where
@@ -104,3 +109,4 @@ instance Show Diagnostic where
     "Error: `unquote` not in a `quasiquote` context: " ++ show val
   show (Unimplemented feature) =
     "Error: " ++ feature ++ " is not implemented. You should implement it first!"
+

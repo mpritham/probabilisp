@@ -1,6 +1,7 @@
 module Eval where
 
 import Core
+import Prob
 import Control.Monad.Except
 import qualified Data.HashMap.Strict as H (HashMap, insert, lookup, empty, fromList, union)
 import Control.Monad.State
@@ -49,6 +50,7 @@ keywords = [ "define"
            , "cond"
            , "let"
            , "let*"
+           , "uniform"
            ]
 
 -- ### The monadic evaluator
@@ -60,6 +62,7 @@ eval :: Val -> EvalState Val
 -- Self-evaluating expressions
 eval v@(Number _) = return v
 eval v@(Boolean _) = return v
+eval v@(Dist _) = return v {- TODO: maybe remove -}
 
 -- Symbol evaluates to the value bound to it
 eval (Symbol sym) =
@@ -89,6 +92,13 @@ eval expr@(Pair v1 v2) = case flattenList expr of
     evalList :: [Val] -> EvalState Val
 
     evalList [] = throwError $ InvalidExpression expr
+
+    -- uniform
+    evalList [Symbol "uniform", Pair (Symbol "quote") tail] =
+      do
+        elems <- getList tail
+        elems' <- getList (head elems)
+        return (Dist $ unD (uniform elems'))
 
     -- quote
     evalList [Symbol "quote", e] = return e

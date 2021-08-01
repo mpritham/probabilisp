@@ -129,6 +129,15 @@ dice n = join (:) die (dice (n - 1))
 -}
 
 {-
+
+(define die (uniform '(1 2 3 4 5 6)))  ->  [(Number 1, 1/6), (2)]
+
+(define (dice n) 
+  (cond ((= n 0) (uniform '()))
+        ((else) (join die (dice (- n 1)))))
+-}
+
+{-
 Example 2.1: Monty Hall
 
 data Outcome = Win | Lose
