@@ -111,6 +111,21 @@ selectMany n c = do
 select :: Eq a => Int -> [a] -> Dist [a]
 select n = mapD (reverse . fst) . selectMany n
 
+-- Sample
+
+sampleOne :: Eq a => [a] -> Dist (a, [a])
+sampleOne c = uniform [(v, c) | v <- c] 
+
+sampleMany :: Eq a => Int -> [a] -> Dist ([a], [a])
+sampleMany 0 c = return ([], c)
+sampleMany n c = do
+  (x, c1) <- sampleOne c
+  (xs, c2) <- sampleMany (n -1) c1
+  return (x : xs, c2)
+
+sample :: Eq a => Int -> [a] -> Dist [a]
+sample n = mapD (reverse . fst) . sampleMany n
+
 {-
 Example 1: Dice
 
@@ -128,15 +143,39 @@ dice n = join (:) die (dice (n - 1))
 6.666667e-2
 -}
 
-{-
-
-(define die (uniform '(1 2 3 4 5 6)))  ->  [(Number 1, 1/6), (2)]
-
-(define (dice n) 
-  (cond ((= n 0) (uniform '()))
-        ((else) (join die (dice (- n 1)))))
+{- Dice example
+(define die (uniform '(1 2 3 4 5 6)))
+(define (dice n) (cond ((= n 0) (uniform '( '()))) (else (concatP die (dice (- n 1))))))
+(define (filter pred xs) (cond ((null? xs) xs) ((pred (car xs)) (cons (car xs) (filter pred (cdr xs)))) (else (filter pred (cdr xs)))))
+(define (length xs) (cond ((null? xs) 0) (else (+ 1 (length (cdr xs))))))
+(define (eq6? x) (= 6 x))
+(define (pred xs) (>= (length (filter eq6? xs)) 2))
+(?? pred (dice 4))
 -}
 
+-- (define (listN n) (cond ((= 0 n) '()) (else (cons n (listN (- n 1))))))
+
+
+-- (define (birthdayPredH xs) (cond ((<= (length xs) 1) #f) ((= (car xs) (car (cdr xs))) #t) (else (birthdayPredH (cdr xs))))))
+
+-- (define (birthdayPred xs) (birthdayPredH (sort xs)))
+-- (define (birthdayPred xs) (birthdayPredH (sort xs)))
+-- (?? birthdayPred (sample 2 (listN 52)))
+
+{- Birthday problem
+
+
+(?? birthdayPred (sample 3 (uniform (listN 366))))
+
+-}
+
+{- Marble example
+(define (rgbPred xs) (let ((i1 (car xs)) (i2 (car (cdr xs))) (i3 (car (cdr (cdr xs))))) (and (eq? i1 'r) and (eq? i2 'g) (eq? i3 'b)))))
+(?? rgbPred (select 3 '('r 'r 'g 'g 'b)))
+-}
+
+-- (define (length xs) (cond ((null? xs) 0) (else (+ 1 (length (cdr xs))))))
+    
 {-
 Example 2.1: Monty Hall
 
@@ -158,6 +197,11 @@ firstChoice = uniform [Win, Lose, Lose]
 
 > firstChoice >>= switch
 [(Lose,0.33333334),(Win,0.6666667)]
+
+(define firstChoice (uniform '('win 'lose 'lose)))
+(define switch 
+
+)
 -}
 
 {-

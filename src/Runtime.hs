@@ -136,6 +136,7 @@ eq (x:xs) = return $ Boolean $ foldl (eq' x) True xs where
   eq' (Number a) _ (Number b) = a == b
   eq' (Boolean a) _ (Boolean b) = a == b
   eq' (Symbol a) _ (Symbol b) = a == b
+  eq' p1@(Pair _ _) _ p2@(Pair _ _) = p1 == p2
   eq' _ _ _ = False
 
 -- Primitive function `list?` predicate
@@ -183,6 +184,7 @@ isBoolean args = throwError $ UnexpectedArgs args
 -- TODO
 isNull :: [Val] -> EvalState Val
 isNull [Nil] = return (Boolean True)
+isNull [] = return (Boolean True)
 isNull [_] = return (Boolean False)
 isNull args = throwError $ UnexpectedArgs args
 

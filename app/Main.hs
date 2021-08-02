@@ -23,6 +23,26 @@ import Prelude hiding (lookup)
 printLn :: String -> IO ()
 printLn str = hPutStrLn stdout str >> hFlush stdout
 
+prelude :: Env -> Env
+prelude env = 
+  foldl (flip aux) env [
+    "(define die (uniform '(1 2 3 4 5 6)))"
+    , "(define (dice n) (cond ((= n 0) (uniform '( '()))) (else (concatP die (dice (- n 1))))))"
+    , "(define (filter pred xs) (cond ((null? xs) xs) ((pred (car xs)) (cons (car xs) (filter pred (cdr xs)))) (else (filter pred (cdr xs)))))"
+    , "(define (length xs) (cond ((null? xs) 0) (else (+ 1 (length (cdr xs))))))"
+    , "(define (eq6? x) (= 6 x))"
+    , "(define (listN n) (cond ((= 0 n) '()) (else (cons n (listN (- n 1))))))"
+  ]
+  where 
+    aux command env = 
+      case run rawExprP command of
+        [(expr, s)] ->
+          case runExcept $ runStateT (eval expr) env of
+            Left err -> env
+            Right (Void, env') -> env'
+            Right (val, env') -> env'
+        _ -> env
+
 repl :: Env -> IO ()
 repl env = do
   putStr "probabilisp> "
@@ -41,4 +61,6 @@ repl env = do
   repl env -- Loop with old env
 
 main :: IO ()
-main = repl runtime
+main = 
+  let runtime' = prelude runtime in
+  repl runtime'

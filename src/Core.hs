@@ -15,6 +15,7 @@ data Val
   = Symbol String
   | Boolean Bool
   | Number Int
+  | Float Float
   | Nil
   | Pair Val Val
   | PrimFunc ([Val] -> EvalState Val)
@@ -63,11 +64,26 @@ instance Show Val where
       Right vl -> "(" ++ unwords (map show vl) ++ ")"
       Left (p1, p2) -> "(" ++ unwords (map show p1) ++ " . " ++ show p2 ++ ")"
   show (Number i)       = show i
+  show (Float i)       = show i
   show (Boolean b)      = if b then "#t" else "#f"
   show (PrimFunc _)     = "#<primitive>"
   show (Func args _ _)  = "#<function:(λ (" ++ unwords args ++ ") ...)>"
   show (Dist lst)       = "#<dist" ++ show lst ++ ">"
   show Void             = ""
+
+instance Eq Val where
+  (==) (Symbol i) (Symbol j) = i == j
+  (==) (Boolean i) (Boolean j) = i == j
+  (==) Nil Nil = True
+  (==) (Pair i1 i2) (Pair j1 j2) = i1 == j1 && i2 == j2
+  (==) (Number i) (Number j) = i == j
+  (==) (Float i) (Float j) = i == j
+  (==) Void Void = True
+  (==) _ _ = False
+
+instance Ord Val where
+  compare (Number i) (Number j) = compare i j
+  compare _ _ = EQ
 
 showArgs :: [Val] -> String
 showArgs = unwords . map show
@@ -77,6 +93,7 @@ typeName Symbol{} = "Symbol"
 typeName Pair{} = "Pair"
 typeName Nil{} = "Nil"
 typeName Number{} = "Number"
+typeName Float{} = "Float"
 typeName Boolean{} = "Boolean"
 typeName PrimFunc{} = "PrimFunc"
 typeName Func{} = "Func"

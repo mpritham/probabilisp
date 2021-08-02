@@ -40,6 +40,11 @@ getList (Pair v1 v2) =
      return (v1 : xs)
 getList e = throwError $ InvalidSpecialForm "special" e
 
+listToPair :: [Val] -> Val
+listToPair [] = Nil
+listToPair [x] = Pair x Nil
+listToPair (x:xs) = Pair x (listToPair xs)
+
 --- ### Keywords
 
 -- When evaluating special forms, a list form starting with a keyword
@@ -51,6 +56,11 @@ keywords = [ "define"
            , "let"
            , "let*"
            , "uniform"
+           , "concatP"
+           , "??"
+           , "select"
+           , "sample"
+           , "sort"
            ]
 
 -- ### The monadic evaluator
@@ -61,6 +71,7 @@ eval :: Val -> EvalState Val
 
 -- Self-evaluating expressions
 eval v@(Number _) = return v
+eval v@(Float _) = return v
 eval v@(Boolean _) = return v
 eval v@(Dist _) = return v {- TODO: maybe remove -}
 
@@ -94,11 +105,64 @@ eval expr@(Pair v1 v2) = case flattenList expr of
     evalList [] = throwError $ InvalidExpression expr
 
     -- uniform
-    evalList [Symbol "uniform", Pair (Symbol "quote") tail] =
+    evalList [Symbol "uniform", tail] =
       do
-        elems <- getList tail
-        elems' <- getList (head elems)
+        elemsEvaled <- eval tail
+        elems <- getList elemsEvaled
+        elems' <- mapM eval elems
         return (Dist $ unD (uniform elems'))
+
+    -- join (:)
+    evalList [Symbol "concatP", unevaledDist1, unevaledDist2] = -- (concatP (uniform '(1 2 3)))
+      do 
+        dist1 <- eval unevaledDist1
+        dist2 <- eval unevaledDist2
+        case (dist1, dist2) of
+          (Dist d1, Dist d2) -> return (Dist $ unD $ Prob.join Pair (D d1) (D d2))
+          _ -> throwError $ InvalidExpression dist1
+
+    -- ??
+    evalList [Symbol "??", pred, unevaledDist] =
+      do
+        p <- eval pred
+        dist <- eval unevaledDist
+        case dist of 
+          (Dist d) -> Float <$> foldr (aux p) (return 0.0) d
+          _ -> throwError $ InvalidExpression dist
+      where
+        aux p (x, f) acc =
+          do
+            c <- applyDontEvalArgs p [x]
+            acc' <- acc
+            case c of
+              Boolean True -> return (acc' + f)
+              _ -> return acc'
+
+    -- select
+    evalList [Symbol "select", Number n, tail] =
+      do
+        elemsEvaled <- eval tail
+        elems <- getList elemsEvaled
+        elems' <- mapM eval elems
+        return (Dist $ map (\(lst, p) -> (listToPair lst, p)) $ unD (select n elems'))
+
+    -- sample
+    evalList [Symbol "sample", Number n, tail] =
+      do
+        elemsEvaled <- eval tail
+        elems <- getList elemsEvaled
+        elems' <- mapM eval elems
+        return (Dist $ map (\(lst, p) -> (listToPair lst, p)) $ unD (sample n elems'))
+
+    -- sort
+    evalList [Symbol "sort", lst] =
+      let quicksort []     = []
+          quicksort (p:xs) = quicksort (filter (< p) xs) ++ [p] ++ quicksort (filter (>= p) xs)
+      in
+        do
+          elemsEvaled <- eval lst
+          elems <- getList elemsEvaled
+          return $ listToPair (quicksort elems)
 
     -- quote
     evalList [Symbol "quote", e] = return e
@@ -202,3 +266,14 @@ apply (PrimFunc p) args =
      p argVals
   -- Other values are not applicable
 apply f args = throwError $ CannotApply f args
+
+applyDontEvalArgs :: Val -> [Val] -> EvalState Val
+applyDontEvalArgs (Func params body env) args =
+  do
+    origEnv <- get
+    modify $ H.union (H.union (H.fromList (zip params args)) env)
+    evaled <- eval body
+    modify $ const origEnv
+    return evaled
+
+applyDontEvalArgs f args = throwError $ CannotApply f args
