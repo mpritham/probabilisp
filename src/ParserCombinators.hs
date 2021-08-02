@@ -1,8 +1,8 @@
 module ParserCombinators where
 
 import Core
+import Data.Char (isSpace)
 import Prelude
-import Data.Char(isSpace)
 
 newtype Parser a = Parser (String -> [(a, String)])
 
@@ -55,11 +55,14 @@ seq p q =
       result (x, y)
 
 choice :: Parser a -> Parser a -> Parser a
-choice p q = Parser (\xs -> case run p xs of
-                        [] -> run q xs
-                        (x:_) -> [x])
+choice p q =
+  Parser
+    ( \xs -> case run p xs of
+        [] -> run q xs
+        (x : _) -> [x]
+    )
 
-(<|>) ::  Parser a -> Parser a -> Parser a
+(<|>) :: Parser a -> Parser a -> Parser a
 (<|>) = choice
 
 sat :: (Char -> Bool) -> Parser Char
@@ -81,13 +84,16 @@ upper = sat (\x -> 'A' <= x && x <= 'Z')
 
 string :: String -> Parser String
 string "" = result ""
-string (x:xs) = char x >> string xs >> return (x:xs)
+string (x : xs) = char x >> string xs >> return (x : xs)
 
 eof :: Parser ()
-eof = Parser (\xs ->
-                case xs of
-                 [] -> [((), [])]
-                 _ -> [])
+eof =
+  Parser
+    ( \xs ->
+        case xs of
+          [] -> [((), [])]
+          _ -> []
+    )
 
 integer :: Parser String
 integer = token $ many1plus digit
@@ -99,7 +105,7 @@ many1plus :: Parser a -> Parser [a]
 many1plus p = do
   x <- p
   xs <- many p
-  return (x:xs)
+  return (x : xs)
 
 spaces :: Parser String
 spaces = many (sat isSpace)
@@ -111,7 +117,7 @@ sepBy1plus :: Parser a -> Parser b -> Parser [a]
 sepBy1plus p sep = do
   x <- p
   xs <- many (sep >> p)
-  return (x:xs)
+  return (x : xs)
 
 option :: a -> Parser a -> Parser a
 option x p = p <|> return x
@@ -133,16 +139,16 @@ token p = spaces >> p
 oneOf :: [Char] -> Parser Char
 oneOf [] = undefined
 oneOf [c] = char c
-oneOf (c:cs) = foldl (\acc x -> acc <|> (char x)) (char c) cs
+oneOf (c : cs) = foldl (\acc x -> acc <|> (char x)) (char c) cs
 
 idP :: Parser String
 idP =
-  let identFirst = oneOf $ "-*+/:?><=!" Prelude.++ ['a'..'z'] Prelude.++ ['A'..'Z']
-      identRest  = identFirst <|> digit in
-  do
-    x <- identFirst
-    xs <- (many identRest)
-    return (x:xs)
+  let identFirst = oneOf $ "-*+/:?><=!" Prelude.++ ['a' .. 'z'] Prelude.++ ['A' .. 'Z']
+      identRest = identFirst <|> digit
+   in do
+        x <- identFirst
+        xs <- (many identRest)
+        return (x : xs)
 
 --- ### Value parsers
 
@@ -151,36 +157,38 @@ symP = Symbol <$> idP
 
 pairList :: [Val] -> Val
 pairList [] = Nil
-pairList (x:xs) = Pair x (pairList xs)
+pairList (x : xs) = Pair x (pairList xs)
 
 pairUnfold :: [Val] -> Val -> Val
 pairUnfold [] tail = tail
-pairUnfold (x:xs) tail = Pair x (pairUnfold xs tail)
+pairUnfold (x : xs) tail = Pair x (pairUnfold xs tail)
 
 -- Parses list and dotted list
 listRestP :: Parser Val
-listRestP = do exprs <- rawExprP `sepBy` spaces
-               maybeTail <- optionMaybe $ char '.' >> spaces >> rawExprP
-               return $ case maybeTail of
-                 Just tail -> pairUnfold exprs tail
-                 Nothing -> pairUnfold exprs Nil
+listRestP = do
+  exprs <- rawExprP `sepBy` spaces
+  maybeTail <- optionMaybe $ char '.' >> spaces >> rawExprP
+  return $ case maybeTail of
+    Just tail -> pairUnfold exprs tail
+    Nothing -> pairUnfold exprs Nil
 
 -- Parses lists
 listP :: Parser Val
-listP = do char '(' >> spaces
-           result <- listRestP
-           spaces >> char ')'
-           return result
+listP = do
+  char '(' >> spaces
+  result <- listRestP
+  spaces >> char ')'
+  return result
 
 numP :: Parser Val
 numP = Number . read <$> integer
 
 boolP :: Parser Val
 boolP = char '#' >> boolLitP
-  where boolLitP = ((Boolean <$> const True) <$> char 't')
-               <|> ((Boolean <$> const False) <$> char 'f')
-
-
+  where
+    boolLitP =
+      ((Boolean <$> const True) <$> char 't')
+        <|> ((Boolean <$> const False) <$> char 'f')
 
 quoteP :: Parser Val
 quoteP = char '\'' >> (\x -> pairUnfold [Symbol "quote", x] Nil) <$> rawExprP
@@ -192,13 +200,14 @@ unquoteP :: Parser Val
 unquoteP = char ',' >> (\x -> pairUnfold [Symbol "unquote", x] Nil) <$> rawExprP
 
 rawExprP :: Parser Val
-rawExprP = numP
-       <|> symP
-       <|> boolP
-       <|> quoteP
-       <|> quasiquoteP
-       <|> unquoteP
-       <|> listP
+rawExprP =
+  numP
+    <|> symP
+    <|> boolP
+    <|> quoteP
+    <|> quasiquoteP
+    <|> unquoteP
+    <|> listP
 
 exprP :: Parser Val
 exprP = between spaces spaces rawExprP <* eof

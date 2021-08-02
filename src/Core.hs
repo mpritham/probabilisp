@@ -1,11 +1,10 @@
 module Core where
 
-import Prob as P
-
+import Control.Monad.Except
+import Control.Monad.State
 import Data.HashMap.Strict as H (HashMap, empty, fromList, insert, lookup)
 import Data.Typeable
-import Control.Monad.State
-import Control.Monad.Except
+import Prob as P
 
 --- ### Environment
 type Env = H.HashMap String Val
@@ -26,18 +25,19 @@ data Val
 
 type EvalState a = StateT Env (Except Diagnostic) a
 
-data Diagnostic = UnexpectedArgs [Val]
-                | TypeError Val
-                | NotFuncError Val
-                | UndefSymbolError String
-                | NotArgumentList Val
-                | InvalidSpecialForm String Val
-                | CannotApply Val [Val]
-                | InvalidExpression Val
-                | NotASymbol Val
-                | NotAListOfTwo Val
-                | UnquoteNotInQuasiquote Val
-                | Unimplemented String
+data Diagnostic
+  = UnexpectedArgs [Val]
+  | TypeError Val
+  | NotFuncError Val
+  | UndefSymbolError String
+  | NotArgumentList Val
+  | InvalidSpecialForm String Val
+  | CannotApply Val [Val]
+  | InvalidExpression Val
+  | NotASymbol Val
+  | NotAListOfTwo Val
+  | UnquoteNotInQuasiquote Val
+  | Unimplemented String
 
 err_type :: Diagnostic -> String
 err_type (UndefSymbolError _) = "ERROR: undef_symbol"
@@ -57,19 +57,19 @@ flattenList Nil = Right []
 flattenList v = Left ([], v)
 
 instance Show Val where
-  show (Symbol sym)     = sym
-  show (Nil)            = "()"
-  show (Pair v1 v2)     =
+  show (Symbol sym) = sym
+  show (Nil) = "()"
+  show (Pair v1 v2) =
     case flattenList (Pair v1 v2) of
       Right vl -> "(" ++ unwords (map show vl) ++ ")"
       Left (p1, p2) -> "(" ++ unwords (map show p1) ++ " . " ++ show p2 ++ ")"
-  show (Number i)       = show i
-  show (Float i)       = show i
-  show (Boolean b)      = if b then "#t" else "#f"
-  show (PrimFunc _)     = "#<primitive>"
-  show (Func args _ _)  = "#<function:(λ (" ++ unwords args ++ ") ...)>"
-  show (Dist lst)       = "#<dist" ++ show lst ++ ">"
-  show Void             = ""
+  show (Number i) = show i
+  show (Float i) = show i
+  show (Boolean b) = if b then "#t" else "#f"
+  show (PrimFunc _) = "#<primitive>"
+  show (Func args _ _) = "#<function:(λ (" ++ unwords args ++ ") ...)>"
+  show (Dist lst) = "#<dist" ++ show lst ++ ">"
+  show Void = ""
 
 instance Eq Val where
   (==) (Symbol i) (Symbol j) = i == j
@@ -89,17 +89,16 @@ showArgs :: [Val] -> String
 showArgs = unwords . map show
 
 typeName :: Val -> String
-typeName Symbol{} = "Symbol"
-typeName Pair{} = "Pair"
-typeName Nil{} = "Nil"
-typeName Number{} = "Number"
-typeName Float{} = "Float"
-typeName Boolean{} = "Boolean"
-typeName PrimFunc{} = "PrimFunc"
-typeName Func{} = "Func"
+typeName Symbol {} = "Symbol"
+typeName Pair {} = "Pair"
+typeName Nil {} = "Nil"
+typeName Number {} = "Number"
+typeName Float {} = "Float"
+typeName Boolean {} = "Boolean"
+typeName PrimFunc {} = "PrimFunc"
+typeName Func {} = "Func"
 typeName Void = "Void"
-typeName Dist{} = "Dist"
-
+typeName Dist {} = "Dist"
 
 instance Show Diagnostic where
   show (UnexpectedArgs actual) =
@@ -126,4 +125,3 @@ instance Show Diagnostic where
     "Error: `unquote` not in a `quasiquote` context: " ++ show val
   show (Unimplemented feature) =
     "Error: " ++ feature ++ " is not implemented. You should implement it first!"
-

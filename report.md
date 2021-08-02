@@ -20,6 +20,54 @@ mathematical computation. To this end, Probabalisp is able to represent problems
 ## Implementation
 
 ### Major tasks and capabilities
+1. A monadic parser combinator library was implemented to lex Probabilisp tokens, and parse Probabilisp expressions. The parser's main abstraction is as follows:
+
+```haskell
+newtype Parser a = Parser (String -> [(a, String)])
+
+result :: a -> Parser a
+result v = Parser $ \inp -> [(v, inp)]
+
+bind :: Parser a -> (a -> Parser b) -> Parser b
+bind (Parser p) f =
+  Parser $ \inp -> concat [app (f x) inp' | (x, inp') <- p inp]
+  where
+    app (Parser q) = q
+
+instance Functor Parser where
+  fmap f (Parser a) = Parser (\inp -> map (\(x, y) -> (f x, y)) $ a inp)
+
+instance Applicative Parser where
+  pure = result
+  Parser f <*> Parser a =
+    Parser
+      ( \inp ->
+          [ (fn x, inp'') | (x, inp') <- a inp, (fn, inp'') <- f inp'
+          ]
+      )
+
+instance Monad Parser where
+  (>>=) = bind
+  return = result
+
+class Monad m => MonadOPlus m where
+  zero :: m a
+  (++) :: m a -> m a -> m a
+
+instance MonadOPlus Parser where
+  zero = Parser (\_ -> [])
+  (Parser p) ++ (Parser q) = Parser (\inp -> (p inp) Prelude.++ (q inp))
+
+```
+2. Several 
+
+3. The Probabilisp interpreter is a subset of the Scheme interpreter. The interpreter supports:
+    - Functions
+    - Lambda expressions
+    - Integer and Float arithmetic
+    - List processing functions such as `length` and `sort`
+    - Conditional evaluation via `cond`
+
 
 ### Components of the project
 
@@ -33,11 +81,11 @@ mathematical computation. To this end, Probabalisp is able to represent problems
 ## Tests
 ## Listing
 
-```lisp:example/cards.lisp
-```
-
 ```lisp:example/dice.lisp
 ```
 
 ```lisp:example/marbles.lisp
+```
+
+```lisp:example/cards.lisp
 ```

@@ -114,7 +114,7 @@ select n = mapD (reverse . fst) . selectMany n
 -- Sample
 
 sampleOne :: Eq a => [a] -> Dist (a, [a])
-sampleOne c = uniform [(v, c) | v <- c] 
+sampleOne c = uniform [(v, c) | v <- c]
 
 sampleMany :: Eq a => Int -> [a] -> Dist ([a], [a])
 sampleMany 0 c = return ([], c)
@@ -127,7 +127,36 @@ sample :: Eq a => Int -> [a] -> Dist [a]
 sample n = mapD (reverse . fst) . sampleMany n
 
 {-
-Example 1: Dice
+Probabilisp Example 1: Dice
+
+(define die (uniform '(1 2 3 4 5 6)))
+(define (dice n) (cond ((= n 0) (uniform '( '()))) (else (concatP die (dice (- n 1))))))
+(define (filter pred xs) (cond ((null? xs) xs) ((pred (car xs)) (cons (car xs) (filter pred (cdr xs)))) (else (filter pred (cdr xs)))))
+(define (length xs) (cond ((null? xs) 0) (else (+ 1 (length (cdr xs))))))
+(define (eq6? x) (= 6 x))
+(define (pred xs) (>= (length (filter eq6? xs)) 2))
+(?? pred (dice 4))
+-}
+
+{-
+Probabilisp Example 2: Marbles
+
+(define (pred xs) (let ((i1 (car xs)) (i2 (car (cdr xs))) (i3 (car (cdr (cdr xs))))) (and (eq? i1 'r) and (eq? i2 'g) (eq? i3 'b)))))
+(?? pred (select 3 '('r 'r 'g 'g 'b)))
+-}
+
+{-
+Probabilisp Example 3: Cards
+
+(define (listN n) (cond ((= 0 n) '()) (else (cons n (listN (- n 1))))))
+(define (predH xs) (cond ((<= (length xs) 1) #f) ((= (car xs) (car (cdr xs))) #t) (else (predH (cdr xs))))))
+(define (pred xs) (predH (sort xs)))
+(define (pred xs) (predH (sort xs)))
+(?? pred (sample 2 (listN 52)))
+-}
+
+{-
+Haskell Example 1: Dice
 
 die :: Dist Int
 die = uniform [1 .. 6]
@@ -138,46 +167,16 @@ dice n = join (:) die (dice (n - 1))
 
 > ((>=2) . length . filter (==6)) ?? dice 4
 0.13194445
+-}
 
+{-
+Haskell Example 2: Marbles
 > (==['R','G','B']) ?? select 3 ['R','R','G','G','B']
 6.666667e-2
 -}
 
-{- Dice example
-(define die (uniform '(1 2 3 4 5 6)))
-(define (dice n) (cond ((= n 0) (uniform '( '()))) (else (concatP die (dice (- n 1))))))
-(define (filter pred xs) (cond ((null? xs) xs) ((pred (car xs)) (cons (car xs) (filter pred (cdr xs)))) (else (filter pred (cdr xs)))))
-(define (length xs) (cond ((null? xs) 0) (else (+ 1 (length (cdr xs))))))
-(define (eq6? x) (= 6 x))
-(define (pred xs) (>= (length (filter eq6? xs)) 2))
-(?? pred (dice 4))
--}
-
--- (define (listN n) (cond ((= 0 n) '()) (else (cons n (listN (- n 1))))))
-
-
--- (define (birthdayPredH xs) (cond ((<= (length xs) 1) #f) ((= (car xs) (car (cdr xs))) #t) (else (birthdayPredH (cdr xs))))))
-
--- (define (birthdayPred xs) (birthdayPredH (sort xs)))
--- (define (birthdayPred xs) (birthdayPredH (sort xs)))
--- (?? birthdayPred (sample 2 (listN 52)))
-
-{- Birthday problem
-
-
-(?? birthdayPred (sample 3 (uniform (listN 366))))
-
--}
-
-{- Marble example
-(define (rgbPred xs) (let ((i1 (car xs)) (i2 (car (cdr xs))) (i3 (car (cdr (cdr xs))))) (and (eq? i1 'r) and (eq? i2 'g) (eq? i3 'b)))))
-(?? rgbPred (select 3 '('r 'r 'g 'g 'b)))
--}
-
--- (define (length xs) (cond ((null? xs) 0) (else (+ 1 (length (cdr xs))))))
-    
 {-
-Example 2.1: Monty Hall
+Haskell Example 3.1: Monty Hall
 
 data Outcome = Win | Lose
   deriving (Eq, Show)
@@ -199,13 +198,13 @@ firstChoice = uniform [Win, Lose, Lose]
 [(Lose,0.33333334),(Win,0.6666667)]
 
 (define firstChoice (uniform '('win 'lose 'lose)))
-(define switch 
+(define switch
 
 )
 -}
 
 {-
-Example 2.2: Monty Hall
+Haskell Example 3.2: Monty Hall
 
 doors :: [Door]
 doors = [A, B, C]
