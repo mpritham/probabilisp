@@ -17,6 +17,7 @@ Probabilisp is a simple Lisp-like domain specific probabilistic programming lang
 ### Major tasks and capabilities
 
 Probabalisp is a general, lisp-like programming language. As such, it supports general lisp programming features such as:
+
 1. Function definitions
 2. Lambda functions
 3. Lists
@@ -26,128 +27,133 @@ Probabalisp is a general, lisp-like programming language. As such, it supports g
 7. Conditional execution via `if` and `cond` statements
 
 It extends the basic functionality of a lisp-like programming language (such as Scheme) by adding primitives for probabilistic statements. This includes support for:
+
 1. Constructing uniform distributions
 2. Joining 2 distributions by concatenating their event sets
 3. Sampling from a distribution with replacement
 4. Sampling from a distribution without replacement
 5. Computing the probabability of an event given a distribution
 
-
 The major tasks required to implement Probabalisp were:
+
 1. A parser to convert raw text into a Probabalisp abstract syntax tree
 2. An interpreter to maintain an environment, and excute code given a Probabalisp AST value
 3. A library to represent probability distributions and events, as well as compute probabilities
+
+#### Examples
+
+There are three examples shown in [`examples`](./examples) that demonstrate the Probabilisp interpreter.
 
 ### Components of the project
 
 1. A monadic parser combinator library was implemented to lex Probabilisp tokens, and parse Probabilisp expressions. The parser's main abstraction is as follows:
 
-    ```haskell
-    -- src/ParserCombinators.hs
+   ```haskell
+   -- src/ParserCombinators.hs
 
-    newtype Parser a = Parser (String -> [(a, String)])
+   newtype Parser a = Parser (String -> [(a, String)])
 
-    result :: a -> Parser a
-    result v = Parser $ \inp -> [(v, inp)]
+   result :: a -> Parser a
+   result v = Parser $ \inp -> [(v, inp)]
 
-    bind :: Parser a -> (a -> Parser b) -> Parser b
-    bind (Parser p) f =
-        Parser $ \inp -> concat [app (f x) inp' | (x, inp') <- p inp]
-        where
-        app (Parser q) = q
+   bind :: Parser a -> (a -> Parser b) -> Parser b
+   bind (Parser p) f =
+       Parser $ \inp -> concat [app (f x) inp' | (x, inp') <- p inp]
+       where
+       app (Parser q) = q
 
-    instance Functor Parser where
-        fmap f (Parser a) = Parser (\inp -> map (\(x, y) -> (f x, y)) $ a inp)
+   instance Functor Parser where
+       fmap f (Parser a) = Parser (\inp -> map (\(x, y) -> (f x, y)) $ a inp)
 
-    instance Applicative Parser where
-        pure = result
-        Parser f <*> Parser a =
-        Parser
-            ( \inp ->
-                [ (fn x, inp'') | (x, inp') <- a inp, (fn, inp'') <- f inp'
-                ]
-            )
+   instance Applicative Parser where
+       pure = result
+       Parser f <*> Parser a =
+       Parser
+           ( \inp ->
+               [ (fn x, inp'') | (x, inp') <- a inp, (fn, inp'') <- f inp'
+               ]
+           )
 
-    instance Monad Parser where
-        (>>=) = bind
-        return = result
+   instance Monad Parser where
+       (>>=) = bind
+       return = result
 
-    class Monad m => MonadOPlus m where
-        zero :: m a
-        (++) :: m a -> m a -> m a
+   class Monad m => MonadOPlus m where
+       zero :: m a
+       (++) :: m a -> m a -> m a
 
-    instance MonadOPlus Parser where
-        zero = Parser (\_ -> [])
-        (Parser p) ++ (Parser q) = Parser (\inp -> (p inp) Prelude.++ (q inp))
-    ```
+   instance MonadOPlus Parser where
+       zero = Parser (\_ -> [])
+       (Parser p) ++ (Parser q) = Parser (\inp -> (p inp) Prelude.++ (q inp))
+   ```
 
 2. A probabilistic primitives library was implemented based on the [Probabilistic Functional Programming in Haskell](./papers/prob.pdf) paper.
 
-    ```haskell
-    -- src/Prob.hs
+   ```haskell
+   -- src/Prob.hs
 
-    newtype Dist a = D {unD :: [(a, Probability)]}
-    deriving (Eq, Show)
+   newtype Dist a = D {unD :: [(a, Probability)]}
+   deriving (Eq, Show)
 
-    type Probability = Float
+   type Probability = Float
 
-    type Spread a = [a] -> Dist a
+   type Spread a = [a] -> Dist a
 
-    type Event a = a -> Bool
+   type Event a = a -> Bool
 
-    uniform :: Spread a
-    uniform xx =
-    let count = fromIntegral (length xx) :: Float
-        p = 1.0 / count
-    in D (map (\x -> (x, p)) xx)
+   uniform :: Spread a
+   uniform xx =
+   let count = fromIntegral (length xx) :: Float
+       p = 1.0 / count
+   in D (map (\x -> (x, p)) xx)
 
-    (??) :: Event a -> Dist a -> Probability
-    (??) pred (D d) = foldr aux 0 d
-    where
-        aux (x, p) acc
-        | pred x = acc + p
-        | otherwise = acc
+   (??) :: Event a -> Dist a -> Probability
+   (??) pred (D d) = foldr aux 0 d
+   where
+       aux (x, p) acc
+       | pred x = acc + p
+       | otherwise = acc
 
-    join :: (a -> b -> c) -> Dist a -> Dist b -> Dist c
-    join f (D dx) (D dy) = D [(f x y, px * py) | (x, px) <- dx, (y, py) <- dy]
+   join :: (a -> b -> c) -> Dist a -> Dist b -> Dist c
+   join f (D dx) (D dy) = D [(f x y, px * py) | (x, px) <- dx, (y, py) <- dy]
 
-    instance Functor Dist where
-    fmap f (D d) = D [(f x, p) | (x, p) <- d]
+   instance Functor Dist where
+   fmap f (D d) = D [(f x, p) | (x, p) <- d]
 
-    instance Applicative Dist where
-    pure x = D [(x, 1)]
-    (D f) <*> (D d) = D [(g x, p * q) | (x, p) <- d, (g, q) <- f]
+   instance Applicative Dist where
+   pure x = D [(x, 1)]
+   (D f) <*> (D d) = D [(g x, p * q) | (x, p) <- d, (g, q) <- f]
 
-    instance Monad Dist where
-    return x = D [(x, 1)]
-    (D d) >>= f = D [(y, p * q) | (x, p) <- d, (y, q) <- unD (f x)]
+   instance Monad Dist where
+   return x = D [(x, 1)]
+   (D d) >>= f = D [(y, p * q) | (x, p) <- d, (y, q) <- unD (f x)]
 
-    selectOne :: Eq a => [a] -> Dist (a, [a])
-    selectOne c = uniform [(v, delete v c) | v <- c]
+   selectOne :: Eq a => [a] -> Dist (a, [a])
+   selectOne c = uniform [(v, delete v c) | v <- c]
 
-    selectMany :: Eq a => Int -> [a] -> Dist ([a], [a])
-    selectMany 0 c = return ([], c)
-    selectMany n c = do
-    (x, c1) <- selectOne c
-    (xs, c2) <- selectMany (n -1) c1
-    return (x : xs, c2)
+   selectMany :: Eq a => Int -> [a] -> Dist ([a], [a])
+   selectMany 0 c = return ([], c)
+   selectMany n c = do
+   (x, c1) <- selectOne c
+   (xs, c2) <- selectMany (n -1) c1
+   return (x : xs, c2)
 
-    select :: Eq a => Int -> [a] -> Dist [a]
-    select n = mapD (reverse . fst) . selectMany n
+   select :: Eq a => Int -> [a] -> Dist [a]
+   select n = mapD (reverse . fst) . selectMany n
 
-    sampleOne :: Eq a => [a] -> Dist (a, [a])
-    sampleOne c = uniform [(v, c) | v <- c]
+   sampleOne :: Eq a => [a] -> Dist (a, [a])
+   sampleOne c = uniform [(v, c) | v <- c]
 
-    sampleMany :: Eq a => Int -> [a] -> Dist ([a], [a])
-    sampleMany 0 c = return ([], c)
-    sampleMany n c = do
-    (x, c1) <- sampleOne c
-    (xs, c2) <- sampleMany (n -1) c1
-    return (x : xs, c2)
+   sampleMany :: Eq a => Int -> [a] -> Dist ([a], [a])
+   sampleMany 0 c = return ([], c)
+   sampleMany n c = do
+   (x, c1) <- sampleOne c
+   (xs, c2) <- sampleMany (n -1) c1
+   return (x : xs, c2)
 
-    sample :: Eq a => Int -> [a] -> Dist [a]
-    sample n = mapD (reverse . fst) . sampleMany n
-    ```
+   sample :: Eq a => Int -> [a] -> Dist [a]
+   sample n = mapD (reverse . fst) . sampleMany n
+   ```
 
 3. The Probabilisp interpreter is a subset of the Scheme interpreter. The interpreter supports:
    - Functions
@@ -200,18 +206,17 @@ The supported functionality of the **Probabilisp interpreter** is highlighted be
 
 Comparing the end result of the project, with our proposal, we have implemented most of the proposed functionality.
 
-__Parser Combinators__
-   
-   Our proposal outlined the creation of a parser combinator library, which we would use to lex and parse raw text into the Probabalisp AST. This functionality is completed in our final project, and works as expected with no limitations.
+**Parser Combinators**
 
-__Probabalisp Interpreter__
-   
-   We proposed an implementation of a lisp-like language interpreter with support for various features (listed above). All of the features proposed are supported in our implementation.
+Our proposal outlined the creation of a parser combinator library, which we would use to lex and parse raw text into the Probabalisp AST. This functionality is completed in our final project, and works as expected with no limitations.
 
-__Probability Primitives__
-   
-   We proposed the support for uniform distributions, the ability to join distributions, the ability to compute probabilities of events, and the ability to sample elements from a distribution. We support all of these features. We additionally proposed support for non-uniform distributions; we did not have the chance to implement this.
+**Probabalisp Interpreter**
 
+We proposed an implementation of a lisp-like language interpreter with support for various features (listed above). All of the features proposed are supported in our implementation.
+
+**Probability Primitives**
+
+We proposed the support for uniform distributions, the ability to join distributions, the ability to compute probabilities of events, and the ability to sample elements from a distribution. We support all of these features. We additionally proposed support for non-uniform distributions; we did not have the chance to implement this.
 
 ## Tests
 
@@ -224,13 +229,16 @@ See [Appendix A](#appendix-a) for a sample test run.
 ## Listing
 
 - `project/app/Main.hs`
+
   - The Probabilisp REPL.
   - Ability to add Probabilisp commands that will run prior to the REPL (useful for testing).
 
 - `project/src/Core.hs`
+
   - Core data structures taken from MP5. We added a `Val`-type constructor, `Dist [(Val, Float)]`, which represents a distribution.
 
 - `project/src/Eval.hs`
+
   - Eval functions for evaluating parsed input taken from MP5. We added:
     - `uniform`
       - Construct a uniform distribution.
@@ -274,18 +282,23 @@ See [Appendix A](#appendix-a) for a sample test run.
         ```
 
 - `project/src/ParserCombinators.hs`
+
   - Parser combinators based on the [Monadic Parser Combinators](./papers/monparsing.pdf) paper.
 
 - `project/src/Prob.hs`
+
   - Probability primitives based on the [Probabilistic Functional Programming in Haskell](./papers/prob.pdf) paper.
 
 - `project/src/Runtime.hs`
+
   - Runtime taken from MP5.
 
 - `test/Spec.hs`
+
   - Tests (see [Tests](#tests) for more details).
 
 - `examples/`
+
   - Three examples in the Probabilisp language. These can be copied into the Probabilisp REPL (`make run`).
 
 ## Appendix A
