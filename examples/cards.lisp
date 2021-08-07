@@ -1,6 +1,14 @@
 ; probablity of selecting the same card twice from a deck of 52 cards
 ; where a card is put back after being selected
 
+; length of list
+(define (length xs)
+    (cond 
+        ((null? xs)
+            0)
+        (else
+            (+ 1 (length (cdr xs))))))
+
 ; create a list from 1 to n
 (define (listN n)
     (cond
@@ -28,3 +36,6 @@
 (?? pred (sample 2 (listN 52)))
 ;    probabilisp> (?? pred (sample 2 (listN 52)))
 ;    OUTPUT: 1.9230774e-2
+
+
+(?? (predH (sort (sample 2 (listN 52)))))

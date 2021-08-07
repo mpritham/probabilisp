@@ -4,19 +4,21 @@ Probabilistic reasoning is used in many domains, including financial stock predi
 
 ## Getting Started
 
+Navigate to the `project` directory.
+
 ```sh
 # initialize project using package.yaml
-stack init
+make init  # or stack init
 
-# build app
-stack build
+# build the probabilisp interpreter
+make build  # or stack build
 
-# build and run app
-stack run
+# build and run the probabilisp interpreter
+make run  # or stack run
 
 # run tests
-stack test
+make test  # or stack test
 
-# start repl with Prob module loaded
+# start Haskell repl with Prob module loaded
 stack repl ./src/Prob.hs
 ```
