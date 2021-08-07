@@ -96,7 +96,7 @@ f >@> g = (>>= g) . f
 sequ :: Monad m => [a -> m a] -> a -> m a
 sequ = foldl (>@>) return
 
--- Select
+-- Select (select without putting back)
 
 selectOne :: Eq a => [a] -> Dist (a, [a])
 selectOne c = uniform [(v, delete v c) | v <- c]
@@ -111,7 +111,7 @@ selectMany n c = do
 select :: Eq a => Int -> [a] -> Dist [a]
 select n = mapD (reverse . fst) . selectMany n
 
--- Sample
+-- Sample (select and put back)
 
 sampleOne :: Eq a => [a] -> Dist (a, [a])
 sampleOne c = uniform [(v, c) | v <- c]
@@ -150,7 +150,6 @@ Probabilisp Example 3: Cards
 
 (define (listN n) (cond ((= 0 n) '()) (else (cons n (listN (- n 1))))))
 (define (predH xs) (cond ((<= (length xs) 1) #f) ((= (car xs) (car (cdr xs))) #t) (else (predH (cdr xs))))))
-(define (pred xs) (predH (sort xs)))
 (define (pred xs) (predH (sort xs)))
 (?? pred (sample 2 (listN 52)))
 -}

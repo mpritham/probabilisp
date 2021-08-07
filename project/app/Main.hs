@@ -41,7 +41,7 @@ prelude env =
 
 repl :: Env -> IO ()
 repl env = do
-  putStr "probabilisp> "
+  putStrLn "probabilisp> "
   l <- getLine -- Read
   case run rawExprP l of -- Parse
     [(expr, s)] ->

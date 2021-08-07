@@ -6,7 +6,7 @@ maintainer: "pritham2@illinois.edu, zimoms2@illinois.edu"
 copyright: ""
 
 extra-source-files:
-  - README.md
+  - ../README.md
 
 description: Please see the README
 

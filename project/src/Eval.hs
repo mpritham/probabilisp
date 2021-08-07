@@ -113,7 +113,6 @@ eval expr@(Pair v1 v2) = case flattenList expr of
 
       -- join (:)
       evalList [Symbol "concatP", unevaledDist1, unevaledDist2] =
-        -- (concatP (uniform '(1 2 3)))
         do
           dist1 <- eval unevaledDist1
           dist2 <- eval unevaledDist2
