@@ -252,7 +252,12 @@ See [Appendix A](#appendix-a) for a sample test run.
       - Example:
         ```lisp
         (concatP (uniform '(1 2 3)) (uniform '(5 6)))
-        #<dist[((1 . 5),0.16666667),((1 . 6),0.16666667),((2 . 5),0.16666667),((2 . 6),0.16666667),((3 . 5),0.16666667),((3 . 6),0.16666667)]>
+        #<dist[((1 . 5),0.16666667),
+               ((1 . 6),0.16666667),
+               ((2 . 5),0.16666667),
+               ((2 . 6),0.16666667),
+               ((3 . 5),0.16666667),
+               ((3 . 6),0.16666667)]>
         ```
     - `??`
       - Probability of an event (predicate) given a distribution.
@@ -266,13 +271,26 @@ See [Appendix A](#appendix-a) for a sample test run.
       - Example:
         ```lisp
         (select 2 '(1 2 3))
-        #<dist[((2 1),0.16666667),((3 1),0.16666667),((1 2),0.16666667),((3 2),0.16666667),((1 3),0.16666667),((2 3),0.16666667)]>
+        #<dist[((2 1),0.16666667),
+               ((3 1),0.16666667),
+               ((1 2),0.16666667),
+               ((3 2),0.16666667),
+               ((1 3),0.16666667),
+               ((2 3),0.16666667)]>
         ```
     - `sample`
       - Select from a list and put back.
         ```lisp
         (sample 2 '(1 2 3))
-        #<dist[((1 1),0.11111112),((2 1),0.11111112),((3 1),0.11111112),((1 2),0.11111112),((2 2),0.11111112),((3 2),0.11111112),((1 3),0.11111112),((2 3),0.11111112),((3 3),0.11111112)]>
+        #<dist[((1 1),0.11111112),
+               ((2 1),0.11111112),
+               ((3 1),0.11111112),
+               ((1 2),0.11111112),
+               ((2 2),0.11111112),
+               ((3 2),0.11111112),
+               ((1 3),0.11111112),
+               ((2 3),0.11111112),
+               ((3 3),0.11111112)]>
         ```
     - `sort`
       - Sort a list.
@@ -333,8 +351,6 @@ Building executable 'probabilisp' for probabilisp-0.1.0.0..
 [2 of 2] Compiling Paths_probabilisp
 Linking .stack-work/dist/x86_64-osx/Cabal-3.2.1.0/build/probabilisp/probabilisp ...
 probabilisp> copy/register
-Installing library in /Users/Andy/Google Drive (zimoms2@illinois.edu)/CS421-programming-languages/project/probabilisp/project/.stack-work/install/x86_64-osx/da9ae18ae5c1af60bd9c8690241c9f147bba80ca5f4d66756e46c9785a4f3a58/8.10.4/lib/x86_64-osx-ghc-8.10.4/probabilisp-0.1.0.0-Ggi5UrpDgZ7HVAuHiEzJHo
-Installing executable probabilisp in /Users/Andy/Google Drive (zimoms2@illinois.edu)/CS421-programming-languages/project/probabilisp/project/.stack-work/install/x86_64-osx/da9ae18ae5c1af60bd9c8690241c9f147bba80ca5f4d66756e46c9785a4f3a58/8.10.4/bin
 Registering library for probabilisp-0.1.0.0..
 probabilisp> test (suite: spec)
 
