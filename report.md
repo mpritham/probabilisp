@@ -16,6 +16,30 @@ Probabilisp is a simple Lisp-like domain specific probabilistic programming lang
 
 ### Major tasks and capabilities
 
+Probabalisp is a general, lisp-like programming language. As such, it supports general lisp programming features such as:
+1. Function definitions
+2. Lambda functions
+3. Lists
+4. Let expressions to declare local variables
+5. Boolean, Integer, and Floating point declaration
+6. Integer and Floating point arithmetic
+7. Conditional execution via `if` and `cond` statements
+
+It extends the basic functionality of a lisp-like programming language (such as Scheme) by adding primitives for probabilistic statements. This includes support for:
+1. Constructing uniform distributions
+2. Joining 2 distributions by concatenating their event sets
+3. Sampling from a distribution with replacement
+4. Sampling from a distribution without replacement
+5. Computing the probabability of an event given a distribution
+
+
+The major tasks required to implement Probabalisp were:
+1. A parser to convert raw text into a Probabalisp abstract syntax tree
+2. An interpreter to maintain an environment, and excute code given a Probabalisp AST value
+3. A library to represent probability distributions and events, as well as compute probabilities
+
+### Components of the project
+
 1. A monadic parser combinator library was implemented to lex Probabilisp tokens, and parse Probabilisp expressions. The parser's main abstraction is as follows:
 
     ```haskell
@@ -132,17 +156,62 @@ Probabilisp is a simple Lisp-like domain specific probabilistic programming lang
    - List processing functions such as `length` and `sort`
    - Conditional evaluation via `cond`
 
-### Components of the project
-
 ### Project Status
+
+Overall the main components of the project were implemented and are working. This includes the parser combinators and probabilistic primitives libraries. There are features and enhancements that could be added, which are highlighted below.
 
 #### What works well
 
+The supported functionality of the **Probabilisp interpreter** is highlighted below. Each feature has associated tests.
+
+- The parser supports:
+  - Arithmetic operators
+  - Boolean operators
+  - Comparison operators
+  - List operators
+  - Unary operators
+  - Type predicates
+  - Function definitions and applications
+  - Lambda definitions and applications
+  - Conditionals
+  - Let
+  - Quotes
+  - Probability primitives
+  - Sort
+- The probability primitives supported are:
+  - Creating uniform distributions
+  - Joining distributions by concatenating events
+  - Calculating the probability of an event given a distribution
+  - Selecting items from a list, with and without putting them back, to create a distribution
+
 #### What works partially
+
+- The interpreter can take only single lines; having multiline support would be a next step
 
 #### Unimplemented functionality
 
+- Common non-uniform distributions, e.g. (Gaussian, Poisson, Student's t-distribution)
+- Support for constructing arbitrary distributions
+- Computing conditional probabilities
+- Joining distributions using arbitrary functions (only concatenation of events is supported)
+- Randomization used to approximate large distributions (see Section 4 of [Probabilistic Functional Programming in Haskell](./papers/prob.pdf))
+
 #### Comparison with project proposal
+
+Comparing the end result of the project, with our proposal, we have implemented most of the proposed functionality.
+
+__Parser Combinators__
+   
+   Our proposal outlined the creation of a parser combinator library, which we would use to lex and parse raw text into the Probabalisp AST. This functionality is completed in our final project, and works as expected with no limitations.
+
+__Probabalisp Interpreter__
+   
+   We proposed an implementation of a lisp-like language interpreter with support for various features (listed above). All of the features proposed are supported in our implementation.
+
+__Probability Primitives__
+   
+   We proposed the support for uniform distributions, the ability to join distributions, the ability to compute probabilities of events, and the ability to sample elements from a distribution. We support all of these features. We additionally proposed support for non-uniform distributions; we did not have the chance to implement this.
+
 
 ## Tests
 
