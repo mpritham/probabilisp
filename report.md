@@ -8,7 +8,7 @@ Zi Mo (Andy) Su, zimoms2@illinois.edu
 
 ## Overview
 
-Probabilistic reasoning is used in many domains, including financial stock prediction, intrusion detection for cybersecurity, and image recognition. Probabilistic programming is a paradigm in which a user specifies parameters for their desired probability models and inference is performed automatically.
+Probabilistic reasoning is used in many domains, including financial stock prediction, intrusion detection for cyber-security, and image recognition. Probabilistic programming is a paradigm in which a user specifies parameters for their desired probability models and inference is performed automatically.
 
 Probabilisp is a simple Lisp-like domain specific probabilistic programming language. The primary goal of Probabilisp is to make probability primitives accessible to programmers, while abstracting away the details of the mathematical computation. To this end, Probabilisp is able to represent problems that would require several lines of dense math library code with simple functions, e.g. `uniform`, `sample`, and `select`.
 
@@ -32,12 +32,12 @@ It extends the basic functionality of a lisp-like programming language (such as 
 2. Joining 2 distributions by concatenating their event sets
 3. Sampling from a distribution with replacement
 4. Sampling from a distribution without replacement
-5. Computing the probabability of an event given a distribution
+5. Computing the probability of an event given a distribution
 
 The major tasks required to implement Probabalisp were:
 
 1. A parser to convert raw text into a Probabalisp abstract syntax tree
-2. An interpreter to maintain an environment, and excute code given a Probabalisp AST value
+2. An interpreter to maintain an environment, and execute code given a Probabalisp AST value
 3. A library to represent probability distributions and events, as well as compute probabilities
 
 #### Examples
@@ -192,7 +192,7 @@ The supported functionality of the **Probabilisp interpreter** is highlighted be
 
 #### What works partially
 
-- The interpreter can take only single lines; having multiline support would be a next step
+- The interpreter can take only single lines; having multi-line support would be a next step
 
 #### Unimplemented functionality
 
@@ -206,21 +206,21 @@ The supported functionality of the **Probabilisp interpreter** is highlighted be
 
 Comparing the end result of the project, with our proposal, we have implemented most of the proposed functionality.
 
-**Parser Combinators**
+*Parser Combinators*
 
 Our proposal outlined the creation of a parser combinator library, which we would use to lex and parse raw text into the Probabalisp AST. This functionality is completed in our final project, and works as expected with no limitations.
 
-**Probabalisp Interpreter**
+*Probabalisp Interpreter*
 
 We proposed an implementation of a lisp-like language interpreter with support for various features (listed above). All of the features proposed are supported in our implementation.
 
-**Probability Primitives**
+*Probability Primitives*
 
 We proposed the support for uniform distributions, the ability to join distributions, the ability to compute probabilities of events, and the ability to sample elements from a distribution. We support all of these features. We additionally proposed support for non-uniform distributions; we did not have the chance to implement this.
 
 ## Tests
 
-We implemented 195 test cases to test the parser, probability primitives library, and interpreter. The parser test cases were ported over from MP5, giving us ample coverage of the parsing logic. Unit tests were added for each of the probability primitives, e.g., `uniform`, `(??)`, `select`, etc. Finally, to test the entire intepreter we added three test cases correponding to the three examples in the `examples` directory. These examples cover a broad range of functionality, and having them as part of our tests gives us confidence that the interpreter is working as expected.
+We implemented 195 test cases to test the parser, probability primitives library, and interpreter. The parser test cases were ported over from MP5, giving us ample coverage of the parsing logic. Unit tests were added for each of the probability primitives, e.g., `uniform`, `(??)`, `select`, etc. Finally, to test the entire interpreter we added three test cases corresponding to the three examples in the `examples` directory. These examples cover a broad range of functionality, and having them as part of our tests gives us confidence that the interpreter is working as expected.
 
 The tests use the [Haskell Test Framework](https://hackage.haskell.org/package/HTF) with [HUnit](https://hackage.haskell.org/package/HUnit). They are easily readable, which helps document the supported functionality of the Probabilisp language.
 
